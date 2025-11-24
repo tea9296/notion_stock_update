@@ -26,5 +26,5 @@ jobs:
       - name: Run script
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }} 
-          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          DATASOURCE_ID: ${{ secrets.DATASOURCE_ID }}
         run: python notion_update.py
