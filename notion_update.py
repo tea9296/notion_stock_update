@@ -7,10 +7,6 @@ import os
 
 load_dotenv()
 
-# --- 設定區 ---
-NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DATABSOURCE_ID = os.getenv("DATABSOURCE_ID")
-
 
 class NotionSync:
     """Lightweight Notion helper for common DB operations.
@@ -104,4 +100,11 @@ def main():
 
 
 if __name__ == "__main__":
+    # --- 設定區 ---
+    NOTION_TOKEN = os.getenv("NOTION_TOKEN")
+    DATABSOURCE_ID = os.getenv("DATABSOURCE_ID")
+    if not NOTION_TOKEN or not DATABSOURCE_ID:
+        # 如果變數沒有讀到，會提前報錯
+        print(f"致命錯誤：無法讀取  環境變數。{NOTION_TOKEN} {DATABSOURCE_ID}")
+        exit(1)
     main()
