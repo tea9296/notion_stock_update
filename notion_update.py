@@ -33,11 +33,7 @@ class NotionSync:
         """更新 Current price 欄位"""
         self.client.pages.update(
             page_id=page_id,
-            properties={
-                "Current price": {  # 對應您 JSON 中的欄位名稱
-                    "number": new_price
-                }
-            },
+            properties={"Current price": {"number": new_price}},
         )
         print(f"✅ 更新成功: ${new_price}")
 

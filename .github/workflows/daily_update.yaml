@@ -1,0 +1,30 @@
+name: Update Notion Stocks
+
+on:
+  schedule:
+    # 每天美股收盤後 (例如台灣時間早上 6 點) 執行
+    # Cron 語法 (UTC 時間): 分 時 日 月 週
+    - cron: '0 23 * * *' 
+  workflow_dispatch: # 允許手動按按鈕觸發
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install notion-client requests yfinance dotenv
+
+      - name: Run script
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }} 
+          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+        run: python notion_update.py
