@@ -39,7 +39,7 @@ def main():
     syncer = NotionSync(NOTION_TOKEN)
 
     print("正在讀取 Notion 資料...")
-    pages = syncer.query_database(DATABSOURCE_ID)["results"]
+    pages = syncer.query_database(DATASOURCE_ID)["results"]
 
     for page in pages:
         props = page["properties"]
@@ -102,9 +102,9 @@ def main():
 if __name__ == "__main__":
     # --- 設定區 ---
     NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-    DATABSOURCE_ID = os.getenv("DATABSOURCE_ID")
-    if not NOTION_TOKEN or not DATABSOURCE_ID:
+    DATASOURCE_ID = os.getenv("DATASOURCE_ID")
+    if not NOTION_TOKEN or not DATASOURCE_ID:
         # 如果變數沒有讀到，會提前報錯
-        print(f"致命錯誤：無法讀取  環境變數。{NOTION_TOKEN} {DATABSOURCE_ID}")
+        print(f"致命錯誤：無法讀取  環境變數。{NOTION_TOKEN} {DATASOURCE_ID}")
         exit(1)
     main()
