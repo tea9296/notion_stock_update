@@ -9,12 +9,7 @@ load_dotenv()
 
 
 class NotionSync:
-    """Lightweight Notion helper for common DB operations.
-
-    Usage:
-      client = NotionSync()  # reads NOTION_TOKEN from env
-      client.create_page(database_id, properties)
-    """
+    """Lightweight Notion helper for common DB operations."""
 
     def __init__(self, token: Optional[str] = None):
         token = token or os.getenv("NOTION_TOKEN")
@@ -26,20 +21,22 @@ class NotionSync:
         return self.client.data_sources.query(data_source_id=datasource_id, **kwargs)
 
     def update_price(self, page_id, new_price):
-        """更新 Current price 欄位"""
+        """更新 Cur Price 欄位"""
         self.client.pages.update(
             page_id=page_id,
-            properties={"Current price": {"number": new_price}},
+            # ↓↓↓ 修正重點：欄位名稱必須跟 Notion 完全一致（原本寫 "Current price"，實際是 "Cur Price"）
+            properties={"Cur Price": {"number": new_price}},
         )
         print(f"✅ 更新成功: ${new_price}")
 
 
 def main():
-    # 初始化
     syncer = NotionSync(NOTION_TOKEN)
 
     print("正在讀取 Notion 資料...")
     pages = syncer.query_database(DATASOURCE_ID)["results"]
+
+    updated, failed = 0, 0
 
     for page in pages:
         props = page["properties"]
@@ -47,8 +44,7 @@ def main():
 
         # ---------------------------------------------------------
         # 1. 解析股票代號
-        # 優先用 Ticker (title) — 通常存代號 (NVDA, GOOGL...)
-        # fallback 才用 Stock name (rich_text) — 可能是公司全名
+        #    優先用 Ticker (title)；fallback 才用 Stock name (rich_text)
         # ---------------------------------------------------------
         stock_symbol = None
         try:
@@ -60,7 +56,6 @@ def main():
                 rich_text_list = props.get("Stock name", {}).get("rich_text", [])
                 if rich_text_list:
                     stock_symbol = rich_text_list[0]["plain_text"].strip()
-
         except Exception as e:
             print(f"⚠️ 解析欄位錯誤: {e}")
             continue
@@ -76,24 +71,27 @@ def main():
 
         try:
             ticker = yf.Ticker(stock_symbol)
-            # 抓取最新收盤價
             hist = ticker.history(period="1d")
 
             if not hist.empty:
-                current_price = round(hist["Close"].iloc[-1], 2)
-
-                # -----------------------------------------------------
-                # 3. 更新回 Notion (Current price)
-                # -----------------------------------------------------
+                current_price = round(float(hist["Close"].iloc[-1]), 2)
+                # 3. 更新回 Notion (Cur Price)
                 syncer.update_price(page_id, current_price)
+                updated += 1
             else:
                 print("❌ 找不到股價資料")
-
+                failed += 1
         except Exception as e:
             print(f"❌ {stock_symbol} 錯誤: {e}")
+            failed += 1
 
         # 避免請求過於頻繁
         time.sleep(0.5)
+
+    print(f"\n完成：成功 {updated} 筆、失敗 {failed} 筆")
+    # 只要有任何一筆失敗就讓 Action 變紅，避免「Action 成功卻沒更新」的假象
+    if failed > 0:
+        exit(1)
 
 
 if __name__ == "__main__":
@@ -101,7 +99,6 @@ if __name__ == "__main__":
     NOTION_TOKEN = os.getenv("NOTION_TOKEN")
     DATASOURCE_ID = os.getenv("DATASOURCE_ID")
     if not NOTION_TOKEN or not DATASOURCE_ID:
-        # 如果變數沒有讀到，會提前報錯
-        print(f"致命錯誤：無法讀取  環境變數。{NOTION_TOKEN} {DATASOURCE_ID}")
+        print(f"致命錯誤：無法讀取 環境變數。{NOTION_TOKEN} {DATASOURCE_ID}")
         exit(1)
     main()
