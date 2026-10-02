@@ -10,6 +10,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -28,3 +31,9 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }} 
           DATASOURCE_ID: ${{ secrets.DATASOURCE_ID }}
         run: python notion_update.py
+
+      - name: Keep workflow alive   # 新增在最後
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable daily_update.yaml --repo ${{ github.repository }}
